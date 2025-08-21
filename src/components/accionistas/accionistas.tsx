@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, User, Pencil, Trash2 } from "lucide-react";
+import AccionistaModal from "./modal";
 
 const accionistasData = [
   {
@@ -17,13 +21,15 @@ const accionistasData = [
 ];
 
 export default function Accionistas() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">
           Accionistas/Socios
         </h3>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" onClick={() => setIsModalOpen(true)}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -47,6 +53,7 @@ export default function Accionistas() {
           </div>
         ))}
       </div>
+      <AccionistaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
   </div>
   )
 }
