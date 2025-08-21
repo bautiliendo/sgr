@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, Check } from "lucide-react";
+import { Upload, Check, FileQuestionMarkIcon, Pencil, Trash2 } from "lucide-react";
 import { step1Schema, step2Schema } from "@/lib/schemas";
 import { toast } from "react-toastify";
+import Accionistas from "@/components/accionistas/accionistas";
 
 type PersoneriaType = "juridica" | "fisica" | null;
 
@@ -48,7 +49,9 @@ const initialFormData: FormData = {
 export default function FormularioEmpresa() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
+  const [errors, setErrors] = useState<Record<string, string[] | undefined>>(
+    {}
+  );
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
   const [fileError, setFileError] = useState<string | null>(null);
 
@@ -60,7 +63,7 @@ export default function FormularioEmpresa() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('formData', JSON.stringify(formData));
+    localStorage.setItem("formData", JSON.stringify(formData));
   }, [formData]);
 
   const steps = [
@@ -103,9 +106,13 @@ export default function FormularioEmpresa() {
 
     const uploadedDocKeys = Object.keys(uploadedFiles);
 
-    const allDocsUploaded = requiredDocs.every(doc => uploadedDocKeys.includes(doc));
+    const allDocsUploaded = requiredDocs.every((doc) =>
+      uploadedDocKeys.includes(doc)
+    );
     if (!allDocsUploaded) {
-      setFileError("Por favor, suba todos los documentos requeridos antes de enviar.");
+      setFileError(
+        "Por favor, suba todos los documentos requeridos antes de enviar."
+      );
       return;
     }
 
@@ -119,10 +126,13 @@ export default function FormularioEmpresa() {
     setCurrentStep(1);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, docName: string) => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    docName: string
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
-      setUploadedFiles(prev => ({
+      setUploadedFiles((prev) => ({
         ...prev,
         [docName]: file,
       }));
@@ -132,29 +142,32 @@ export default function FormularioEmpresa() {
     }
   };
 
-  const updateFormData = (field: keyof FormData, value: string | PersoneriaType) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const updateFormData = (
+    field: keyof FormData,
+    value: string | PersoneriaType
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Limpia el error para el campo específico que se está actualizando
     if (errors[field]) {
       setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors }
-        delete newErrors[field]
-        return newErrors
-      })
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
-  }
+  };
 
   const handleStepClick = (step: number) => {
     setCurrentStep(step);
   };
 
   const docsJuridica = [
-    "Manifestación de bienes de accionistas",
+    "Certificado PYME vigente",
+    "DDJJ de bienes personales o manifestacion de bienes de c/ accionista",
     "Ventas post cierre balance",
     "Detalle de deudas",
-    "Certificado PYME vigente",
-    "Últimos dos balances",
+    "Últimos dos balances certificados",
   ];
 
   const docsFisica = [
@@ -164,7 +177,7 @@ export default function FormularioEmpresa() {
     "DNI propio y de su cónyuge",
     "Formulario alta",
     "Reseña",
-    "DDJJ de bienes personales",
+    "DDJJ de bienes personales o manifestacion de bienes",
   ];
 
   return (
@@ -236,7 +249,11 @@ export default function FormularioEmpresa() {
                       <SelectItem value="juridica">Jurídica</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.personeria && <p className="text-sm text-red-600 mt-1">{errors.personeria[0]}</p>}
+                  {errors.personeria && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.personeria[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -255,7 +272,11 @@ export default function FormularioEmpresa() {
                     placeholder="Ingrese nombre o razón social"
                     className="mt-1"
                   />
-                  {errors.nombreRazonSocial && <p className="text-sm text-red-600 mt-1">{errors.nombreRazonSocial[0]}</p>}
+                  {errors.nombreRazonSocial && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.nombreRazonSocial[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -269,7 +290,11 @@ export default function FormularioEmpresa() {
                     placeholder="XX-XXXXXXXX-X"
                     className="mt-1"
                   />
-                  {errors.cuitCuil && <p className="text-sm text-red-600 mt-1">{errors.cuitCuil[0]}</p>}
+                  {errors.cuitCuil && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.cuitCuil[0]}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -288,7 +313,11 @@ export default function FormularioEmpresa() {
                     placeholder="Ingrese nombre"
                     className="mt-1"
                   />
-                  {errors.nombre && <p className="text-sm text-red-600 mt-1">{errors.nombre[0]}</p>}
+                  {errors.nombre && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.nombre[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -302,7 +331,11 @@ export default function FormularioEmpresa() {
                     placeholder="Ingrese apellido"
                     className="mt-1"
                   />
-                  {errors.apellido && <p className="text-sm text-red-600 mt-1">{errors.apellido[0]}</p>}
+                  {errors.apellido && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.apellido[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -321,7 +354,11 @@ export default function FormularioEmpresa() {
                     placeholder="XX-XXXXXXXX-X"
                     className="mt-1"
                   />
-                  {errors.cuitCuilContacto && <p className="text-sm text-red-600 mt-1">{errors.cuitCuilContacto[0]}</p>}
+                  {errors.cuitCuilContacto && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.cuitCuilContacto[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -336,7 +373,11 @@ export default function FormularioEmpresa() {
                     placeholder="correo@ejemplo.com"
                     className="mt-1"
                   />
-                  {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email[0]}</p>}
+                  {errors.email && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.email[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -363,7 +404,11 @@ export default function FormularioEmpresa() {
                       <SelectItem value="otro">Otro</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.relacionCuenta && <p className="text-sm text-red-600 mt-1">{errors.relacionCuenta[0]}</p>}
+                  {errors.relacionCuenta && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.relacionCuenta[0]}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -377,7 +422,11 @@ export default function FormularioEmpresa() {
                     placeholder="+54 11 XXXX-XXXX"
                     className="mt-1"
                   />
-                  {errors.telefono && <p className="text-sm text-red-600 mt-1">{errors.telefono[0]}</p>}
+                  {errors.telefono && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.telefono[0]}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -400,14 +449,34 @@ export default function FormularioEmpresa() {
                           >
                             <span className="text-sm">{doc}</span>
                             {uploadedFiles[doc] ? (
-                              <div className="flex items-center gap-2 text-sm font-medium text-green-600">
-                                <Check className="w-5 h-5" />
-                                <span>Cargado</span>
-                              </div>
+                                <div className="flex gap-1">
+                                <div className="flex items-center gap-2 text-sm font-medium text-green-700" title={uploadedFiles[doc].name}>
+                                  <Check className="w-5 h-5" />
+                                  <span className="hidden group-hover:inline">{uploadedFiles[doc].name}</span>
+                                </div>
+                                  <Button variant="ghost" size="icon">
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="hover:text-red-500"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                             ) : (
-                              <>
-                                <Button asChild variant="outline" size="sm" className="flex items-center gap-2 bg-transparent cursor-pointer">
-                                  <label htmlFor={`file-upload-${doc}-${index}`}>
+                              <div className="flex items-center gap-2">
+                                <FileQuestionMarkIcon className="w-4 h-4" />
+                                <Button
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-2 bg-transparent cursor-pointer"
+                                >
+                                  <label
+                                    htmlFor={`file-upload-${doc}-${index}`}
+                                  >
                                     <Upload className="w-4 h-4" />
                                     Subir
                                   </label>
@@ -418,35 +487,14 @@ export default function FormularioEmpresa() {
                                   className="hidden"
                                   onChange={(e) => handleFileChange(e, doc)}
                                 />
-                              </>
+                              </div>
                             )}
                           </div>
                         ))}
                       </div>
                     </div>
-
                     {/* Accionistas/socios */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">
-                        Accionistas/Socios
-                      </h3>
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <p className="text-gray-600 text-center mb-4">
-                          Accionistas/socios
-                        </p>
-                        <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="sm">
-                            Agregar
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Editar
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Eliminar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <Accionistas />
                   </div>
                 ) : formData.personeria === "fisica" ? (
                   <div>
@@ -461,13 +509,31 @@ export default function FormularioEmpresa() {
                         >
                           <span className="text-sm">{doc}</span>
                           {uploadedFiles[doc] ? (
-                            <div className="flex items-center gap-2 text-sm font-medium text-green-600">
-                              <Check className="w-5 h-5" />
-                              <span>Cargado</span>
-                            </div>
+                              <div className="flex gap-1">
+                              <div className="flex items-center gap-2 text-sm font-medium text-green-700" title={uploadedFiles[doc].name}>
+                                <Check className="w-5 h-5" />
+                                <span className="hidden group-hover:inline">{uploadedFiles[doc].name}</span>
+                              </div>
+                                <Button variant="ghost" size="icon">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="hover:text-red-500"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                           ) : (
-                            <>
-                              <Button asChild variant="outline" size="sm" className="flex items-center gap-2 bg-transparent cursor-pointer">
+                            <div className="flex items-center gap-2">
+                              <FileQuestionMarkIcon className="w-4 h-4" />
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2 bg-transparent cursor-pointer"
+                              >
                                 <label htmlFor={`file-upload-${doc}-${index}`}>
                                   <Upload className="w-4 h-4" />
                                   Subir
@@ -479,7 +545,7 @@ export default function FormularioEmpresa() {
                                 className="hidden"
                                 onChange={(e) => handleFileChange(e, doc)}
                               />
-                            </>
+                            </div>
                           )}
                         </div>
                       ))}
@@ -498,7 +564,7 @@ export default function FormularioEmpresa() {
 
             {/* Párrafo de error para la subida de archivos */}
             {currentStep === 3 && fileError && (
-              <div className="text-center">
+              <div className="text-left">
                 <p className="text-sm text-red-600">{fileError}</p>
               </div>
             )}
@@ -506,7 +572,10 @@ export default function FormularioEmpresa() {
             {/* Botones de navegación */}
             <div className="flex justify-end pt-6 border-t">
               {currentStep !== 1 && (
-                <Button onClick={() => setCurrentStep(currentStep - 1)} className="mr-2">
+                <Button
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="mr-2"
+                >
                   Anterior
                 </Button>
               )}
