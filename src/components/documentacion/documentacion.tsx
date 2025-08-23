@@ -118,7 +118,7 @@ export default function Documentacion({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Descargar ejemplo</p>
+                            <p>Ver ejemplo</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

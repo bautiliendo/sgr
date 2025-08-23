@@ -62,9 +62,22 @@ const initialFormData: FormData = {
 };
 
 const exampleFiles: { [key: string]: string } = {
-  "DDJJ de bienes personales o manifestacion de bienes de c/ accionista": "Manifestación de bienes - Zanel Marcelo.pdf",
-  "DDJJ de bienes personales o manifestacion de bienes": "Manifestación de bienes - Zanel Marcelo.pdf",
-  // TODO: Añadir más archivos de ejemplo aquí
+  // Jurídica
+  "Certificado PYME vigente": "CERTIFICADO_PYME_2026_blur_effect.pdf",
+  "DDJJ de bienes personales o manifestacion de bienes de c/ accionista":
+    "manifestacion_bienes_zanel_blur_v2.pdf",
+  "Ventas post cierre balance": "",
+  "Detalle de deudas": "",
+  "Últimos dos balances certificados": "",
+
+  // Física
+  "Certificado PYME Vigente": "CERTIFICADO_PYME_2026_blur_effect.pdf",
+  "Última DDJJ ganancias": "GANANCIAS 24 blurr.pdf",
+  "DNI propio y de su cónyuge": "",
+  "Formulario alta": "",
+  "Reseña": "",
+  "DDJJ de bienes personales o manifestacion de bienes":
+    "DDJJ Bienes Personales 2024 blurr.pdf",
 };
 
 
