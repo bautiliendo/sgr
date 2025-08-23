@@ -22,5 +22,14 @@ export const accionistaSchema = z.object({
   nombre: z.string().min(2, { message: "Debe tener al menos 5 caracteres." }),
   apellido: z.string().min(2, { message: "Debe tener al menos 5 caracteres." }),
   cuitCuilAccionista: z.string().regex(/^\d{11}$/, { message: "El CUIT/CUIL debe ser un número de 11 dígitos." }),
-  participacion: z.number().min(0, { message: "La participación debe ser mayor a 0." }).max(100, { message: "La participación debe ser menor a 100." }),
+  participacion: z.coerce.number().min(1, { message: "La participación debe ser mayor a 0." }).max(100, { message: "La participación no puede ser mayor a 100." }),
+});
+
+export const step3JuridicaSchema = z.object({
+  accionistas: z.array(accionistaSchema)
+    .min(1, { message: "Debe agregar al menos un accionista." })
+    .refine(accionistas => {
+      const totalParticipacion = accionistas.reduce((acc, curr) => acc + (curr.participacion || 0), 0);
+      return totalParticipacion === 100;
+    }, { message: "La suma de las participaciones de los accionistas debe ser igual al 100%." })
 });

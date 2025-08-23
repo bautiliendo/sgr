@@ -12,14 +12,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, Check, FileQuestionMarkIcon, Pencil, Trash2 } from "lucide-react";
-import { step1Schema, step2Schema } from "@/lib/schemas";
+import { Check } from "lucide-react";
+import { step1Schema, step2Schema, step3JuridicaSchema } from "@/lib/schemas";
 import { toast } from "react-toastify";
-import Accionistas from "@/components/accionistas/accionistas";
+import Documentacion, {
+  docsJuridica,
+  docsFisica,
+} from "@/components/documentacion/documentacion";
 
-type PersoneriaType = "juridica" | "fisica" | null;
+export type PersoneriaType = "juridica" | "fisica" | null;
 
-interface FormData {
+export interface Accionista {
+  id: string;
+  nombre: string;
+  apellido: string;
+  cuitCuilAccionista: string;
+  participacion: number;
+}
+
+export interface FormData {
   // Paso 1
   personeria: PersoneriaType;
   nombreRazonSocial: string;
@@ -32,6 +43,9 @@ interface FormData {
   email: string;
   relacionCuenta: string;
   telefono: string;
+
+  // Paso 3
+  accionistas: Accionista[];
 }
 
 const initialFormData: FormData = {
@@ -44,7 +58,15 @@ const initialFormData: FormData = {
   email: "",
   relacionCuenta: "",
   telefono: "",
+  accionistas: [],
 };
+
+const exampleFiles: { [key: string]: string } = {
+  "DDJJ de bienes personales o manifestacion de bienes de c/ accionista": "Manifestación de bienes - Zanel Marcelo.pdf",
+  "DDJJ de bienes personales o manifestacion de bienes": "Manifestación de bienes - Zanel Marcelo.pdf",
+  // TODO: Añadir más archivos de ejemplo aquí
+};
+
 
 export default function FormularioEmpresa() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -54,11 +76,58 @@ export default function FormularioEmpresa() {
   );
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
   const [fileError, setFileError] = useState<string | null>(null);
+  const [accionistasError, setAccionistasError] = useState<string | null>(null);
+
+  const handleSaveAccionista = (accionistaToSave: Accionista) => {
+    setAccionistasError(null);
+    setFormData(prev => {
+      const existingAccionista = prev.accionistas.find(acc => acc.id === accionistaToSave.id);
+
+      if (existingAccionista) {
+        // Editar
+        const updatedAccionistas = prev.accionistas.map(acc =>
+          acc.id === accionistaToSave.id ? accionistaToSave : acc
+        );
+        return { ...prev, accionistas: updatedAccionistas };
+      } else {
+        // Crear
+        return { ...prev, accionistas: [...prev.accionistas, accionistaToSave] };
+      }
+    });
+  };
+
+  const handleDeleteAccionista = (id: string) => {
+    setAccionistasError(null);
+    setFormData(prev => ({
+      ...prev,
+      accionistas: prev.accionistas.filter(acc => acc.id !== id)
+    }));
+  };
+
+  const handleDeleteFile = (doc: string) => {
+    setUploadedFiles((prev) => {
+      const newFiles = { ...prev };
+      delete newFiles[doc];
+      return newFiles;
+    });
+  };
+
+  const handleDownloadFile = (docName: string): void => {
+    const fileName = exampleFiles[docName];
+    if (fileName) {
+      const url = `/documentos-ejemplo/${fileName}`;
+      window.open(url, "_blank");
+    } else {
+      toast.info("No hay un archivo de ejemplo disponible para este documento.");
+    }
+  };
+
 
   useEffect(() => {
     const savedData = localStorage.getItem("formData");
     if (savedData) {
-      setFormData(JSON.parse(savedData));
+      const parsedData = JSON.parse(savedData);
+      setFormData(prevData => ({ ...prevData, ...parsedData }));
     }
   }, []);
 
@@ -95,6 +164,21 @@ export default function FormularioEmpresa() {
   };
 
   const handleSubmit = () => {
+    // Validación para el paso 3 (jurídica)
+    if (formData.personeria === "juridica") {
+      const validationResult = step3JuridicaSchema.safeParse(formData);
+      if (!validationResult.success) {
+        const formattedErrors = validationResult.error.flatten().fieldErrors;
+        // Mostramos el error de accionistas en el estado de errores general
+        setErrors(prev => ({...prev, ...formattedErrors}));
+        setAccionistasError(
+          formattedErrors.accionistas?.[0] || "Por favor, revise los datos de los accionistas."
+        );
+        return;
+      }
+    }
+
+
     const { personeria } = formData;
     let requiredDocs: string[] = [];
 
@@ -117,6 +201,7 @@ export default function FormularioEmpresa() {
     }
 
     setFileError(null); // Limpiamos el error
+    setAccionistasError(null);
     console.log("Formulario enviado:", { formData, uploadedFiles });
     toast.success("Formulario enviado correctamente!");
     localStorage.removeItem("formData");
@@ -161,24 +246,6 @@ export default function FormularioEmpresa() {
   const handleStepClick = (step: number) => {
     setCurrentStep(step);
   };
-
-  const docsJuridica = [
-    "Certificado PYME vigente",
-    "DDJJ de bienes personales o manifestacion de bienes de c/ accionista",
-    "Ventas post cierre balance",
-    "Detalle de deudas",
-    "Últimos dos balances certificados",
-  ];
-
-  const docsFisica = [
-    "Certificado PYME Vigente",
-    "Constancia de CUIT",
-    "Última DDJJ ganancias",
-    "DNI propio y de su cónyuge",
-    "Formulario alta",
-    "Reseña",
-    "DDJJ de bienes personales o manifestacion de bienes",
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -433,133 +500,17 @@ export default function FormularioEmpresa() {
 
             {/* Paso 3: Documentación */}
             {currentStep === 3 && (
-              <div>
-                {formData.personeria === "juridica" ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Documentación requerida */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">
-                        Documentación requerida
-                      </h3>
-                      <div className="space-y-3">
-                        {docsJuridica.map((doc, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                          >
-                            <span className="text-sm">{doc}</span>
-                            {uploadedFiles[doc] ? (
-                                <div className="flex gap-1">
-                                <div className="flex items-center gap-2 text-sm font-medium text-green-700" title={uploadedFiles[doc].name}>
-                                  <Check className="w-5 h-5" />
-                                  <span className="hidden group-hover:inline">{uploadedFiles[doc].name}</span>
-                                </div>
-                                  <Button variant="ghost" size="icon">
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="hover:text-red-500"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <FileQuestionMarkIcon className="w-4 h-4" />
-                                <Button
-                                  asChild
-                                  variant="outline"
-                                  size="sm"
-                                  className="flex items-center gap-2 bg-transparent cursor-pointer"
-                                >
-                                  <label
-                                    htmlFor={`file-upload-${doc}-${index}`}
-                                  >
-                                    <Upload className="w-4 h-4" />
-                                    Subir
-                                  </label>
-                                </Button>
-                                <input
-                                  id={`file-upload-${doc}-${index}`}
-                                  type="file"
-                                  className="hidden"
-                                  onChange={(e) => handleFileChange(e, doc)}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Accionistas/socios */}
-                    <Accionistas />
-                  </div>
-                ) : formData.personeria === "fisica" ? (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">
-                      Documentación requerida
-                    </h3>
-                    <div className="space-y-3">
-                      {docsFisica.map((doc, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                        >
-                          <span className="text-sm">{doc}</span>
-                          {uploadedFiles[doc] ? (
-                              <div className="flex gap-1">
-                              <div className="flex items-center gap-2 text-sm font-medium text-green-700" title={uploadedFiles[doc].name}>
-                                <Check className="w-5 h-5" />
-                                <span className="hidden group-hover:inline">{uploadedFiles[doc].name}</span>
-                              </div>
-                                <Button variant="ghost" size="icon">
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="hover:text-red-500"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <FileQuestionMarkIcon className="w-4 h-4" />
-                              <Button
-                                asChild
-                                variant="outline"
-                                size="sm"
-                                className="flex items-center gap-2 bg-transparent cursor-pointer"
-                              >
-                                <label htmlFor={`file-upload-${doc}-${index}`}>
-                                  <Upload className="w-4 h-4" />
-                                  Subir
-                                </label>
-                              </Button>
-                              <input
-                                id={`file-upload-${doc}-${index}`}
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => handleFileChange(e, doc)}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">
-                      Por favor, complete el paso 1 para ver la documentación
-                      requerida.
-                    </p>
-                  </div>
-                )}
-              </div>
+              <Documentacion
+                personeria={formData.personeria}
+                accionistas={formData.accionistas}
+                uploadedFiles={uploadedFiles}
+                handleFileChange={handleFileChange}
+                onSaveAccionista={handleSaveAccionista}
+                onDeleteAccionista={handleDeleteAccionista}
+                accionistasError={accionistasError}
+                onDeleteFile={handleDeleteFile}
+                onDownloadFile={handleDownloadFile}
+              />
             )}
 
             {/* Párrafo de error para la subida de archivos */}
