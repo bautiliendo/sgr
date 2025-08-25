@@ -66,8 +66,8 @@ const exampleFiles: { [key: string]: string } = {
   "Certificado PYME vigente": "CERTIFICADO_PYME_2026_blur_effect.pdf",
   "DDJJ de bienes personales o manifestacion de bienes de c/ accionista":
     "manifestacion_bienes_zanel_blur_v2.pdf",
-  "Ventas post cierre balance": "",
-  "Detalle de deudas": "",
+  "Ventas post cierre balance": "ventas post cierre balance.xlsx",
+  "Detalle de deudas": "Deudas detalladas.xlsx",
   "Últimos dos balances certificados": "",
 
   // Física
@@ -75,7 +75,7 @@ const exampleFiles: { [key: string]: string } = {
   "Última DDJJ ganancias": "GANANCIAS 24 blurr.pdf",
   "DNI propio y de su cónyuge": "",
   "Formulario alta": "",
-  "Reseña": "",
+  "Reseña": "Breve Reseña de la Empresa.doc",
   "DDJJ de bienes personales o manifestacion de bienes":
     "DDJJ Bienes Personales 2024 blurr.pdf",
 };
