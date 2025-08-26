@@ -18,9 +18,11 @@ import { toast } from "react-toastify";
 import Documentacion, {
   docsJuridica,
   docsFisica,
+  docsAgricola,
 } from "@/components/documentacion/documentacion";
 
 export type PersoneriaType = "juridica" | "fisica" | null;
+export type TipoEmpresaType = "agricola" | "no-agricola" | null;
 
 export interface Accionista {
   id: string;
@@ -33,6 +35,7 @@ export interface Accionista {
 export interface FormData {
   // Paso 1
   personeria: PersoneriaType;
+  tipoEmpresa: TipoEmpresaType;
   nombreRazonSocial: string;
   cuitCuil: string;
 
@@ -50,6 +53,7 @@ export interface FormData {
 
 const initialFormData: FormData = {
   personeria: null,
+  tipoEmpresa: null,
   nombreRazonSocial: "",
   cuitCuil: "",
   nombre: "",
@@ -74,7 +78,7 @@ const exampleFiles: { [key: string]: string } = {
   "Certificado PYME Vigente": "CERTIFICADO_PYME_2026_blur_effect.pdf",
   "Última DDJJ ganancias": "GANANCIAS 24 blurr.pdf",
   "DNI propio y de su cónyuge": "",
-  "Formulario alta": "",
+  "Formulario alta": "solicitud-admision.xlsx",
   "Reseña": "Breve Reseña de la Empresa.doc",
   "DDJJ de bienes personales o manifestacion de bienes":
     "DDJJ Bienes Personales 2024 blurr.pdf",
@@ -201,6 +205,10 @@ export default function FormularioEmpresa() {
       requiredDocs = docsFisica;
     }
 
+    if (formData.tipoEmpresa === "agricola") {
+      requiredDocs = [...requiredDocs, ...docsAgricola];
+    }
+
     const uploadedDocKeys = Object.keys(uploadedFiles);
 
     const allDocsUploaded = requiredDocs.every((doc) =>
@@ -242,7 +250,7 @@ export default function FormularioEmpresa() {
 
   const updateFormData = (
     field: keyof FormData,
-    value: string | PersoneriaType
+    value: string | PersoneriaType | TipoEmpresaType
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -332,6 +340,34 @@ export default function FormularioEmpresa() {
                   {errors.personeria && (
                     <p className="text-sm text-red-600 mt-1">
                       {errors.personeria[0]}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="tipoEmpresa"
+                    className="text-base font-medium"
+                  >
+                    Tipo de empresa
+                  </Label>
+                  <Select
+                    value={formData.tipoEmpresa || ""}
+                    onValueChange={(value) =>
+                      updateFormData("tipoEmpresa", value)
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Seleccione tipo de empresa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="agricola">Agricola</SelectItem>
+                      <SelectItem value="no-agricola">No agricola</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.tipoEmpresa && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.tipoEmpresa[0]}
                     </p>
                   )}
                 </div>
@@ -515,6 +551,7 @@ export default function FormularioEmpresa() {
             {currentStep === 3 && (
               <Documentacion
                 personeria={formData.personeria}
+                tipoEmpresa={formData.tipoEmpresa}
                 accionistas={formData.accionistas}
                 uploadedFiles={uploadedFiles}
                 handleFileChange={handleFileChange}

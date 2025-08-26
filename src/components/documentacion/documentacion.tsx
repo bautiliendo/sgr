@@ -6,6 +6,7 @@ import {
   Trash2,
   CircleQuestionMark,
   DownloadIcon,
+  EyeIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Accionistas from "@/components/accionistas/accionistas";
@@ -21,6 +22,7 @@ export const docsJuridica = [
   "Certificado PYME vigente",
   "DDJJ de bienes personales o manifestacion de bienes de c/ accionista",
   "Ventas post cierre balance",
+  "Formulario alta",
   "Detalle de deudas",
   "Últimos dos balances certificados",
 ];
@@ -28,17 +30,34 @@ export const docsJuridica = [
 export const docsFisica = [
   "Certificado PYME Vigente",
   "Última DDJJ ganancias",
-  "DNI propio y de su cónyuge",
+  "DDJJ de bienes personales o manifestacion de bienes",
   "Formulario alta",
   "Reseña",
-  "DDJJ de bienes personales o manifestacion de bienes",
+  "DNI propio y de su cónyuge",
+];
+
+export const docsAgricola = ["Plan de siembra", "IP1", "IP2"];
+
+const docsPlantilla = [
+  "Ventas post cierre balance",
+  "Detalle de deudas",
+  "Formulario alta",
+  "Reseña",
+  "Plan de siembra",
+];
+
+const docsSinVisualizacion = [
+  "Últimos dos balances certificados",
+  "DNI propio y de su cónyuge",
 ];
 
 // TODO: Mover a un archivo de tipos dedicado
 type PersoneriaType = "juridica" | "fisica" | null;
+type TipoEmpresaType = "agricola" | "no-agricola" | null;
 
 interface DocumentacionProps {
   personeria: PersoneriaType;
+  tipoEmpresa: TipoEmpresaType;
   accionistas: Accionista[];
   uploadedFiles: Record<string, File>;
   handleFileChange: (
@@ -54,6 +73,7 @@ interface DocumentacionProps {
 
 export default function Documentacion({
   personeria,
+  tipoEmpresa,
   accionistas,
   uploadedFiles,
   handleFileChange,
@@ -63,6 +83,17 @@ export default function Documentacion({
   onDeleteFile,
   onDownloadFile,
 }: DocumentacionProps) {
+  let documentosAMostrar: string[] = [];
+  if (personeria === "juridica") {
+    documentosAMostrar = [...docsJuridica];
+  } else if (personeria === "fisica") {
+    documentosAMostrar = [...docsFisica];
+  }
+
+  if (tipoEmpresa === "agricola") {
+    documentosAMostrar.push(...docsAgricola);
+  }
+
   return (
     <div>
       {personeria === "juridica" ? (
@@ -75,7 +106,7 @@ export default function Documentacion({
               </h3>
             </div>
             <div className="space-y-3">
-              {docsJuridica.map((doc, index) => (
+              {documentosAMostrar.map((doc, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
@@ -110,25 +141,48 @@ export default function Documentacion({
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => onDownloadFile(doc)}>
-                              <DownloadIcon className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Ver ejemplo</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {docsPlantilla.includes(doc) ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDownloadFile(doc)}
+                              >
+                                <DownloadIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Descargar plantilla</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : !docsSinVisualizacion.includes(doc) ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDownloadFile(doc)}
+                              >
+                                <EyeIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Ver ejemplo</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : null}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <CircleQuestionMark className="w-4 h-4" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{docsJuridica[index]}</p>
+                            <p>{documentosAMostrar[index]}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -173,7 +227,7 @@ export default function Documentacion({
             Documentación requerida
           </h3>
           <div className="space-y-3">
-            {docsFisica.map((doc, index) => (
+            {documentosAMostrar.map((doc, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
@@ -208,25 +262,48 @@ export default function Documentacion({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => onDownloadFile(doc)}>
-                            <DownloadIcon className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Descargar ejemplo</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    {docsPlantilla.includes(doc) ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onDownloadFile(doc)}
+                            >
+                              <DownloadIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Descargar plantilla</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : !docsSinVisualizacion.includes(doc) ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onDownloadFile(doc)}
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Ver ejemplo</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : null}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <CircleQuestionMark className="w-4 h-4" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{docsFisica[index]}</p>
+                          <p>{documentosAMostrar[index]}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

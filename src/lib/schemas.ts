@@ -3,6 +3,7 @@ import { z } from "zod";
 // Esquema para el Paso 1: Datos de la Cuenta
 export const step1Schema = z.object({
   personeria: z.enum(["juridica", "fisica"], { message: "Debe seleccionar una personería." }),
+  tipoEmpresa: z.enum(["agricola", "no-agricola"], { message: "Debe seleccionar un tipo de empresa." }),
   nombreRazonSocial: z.string().min(5, { message: "Debe tener al menos 5 caracteres." }),
   cuitCuil: z.string().regex(/^\d{11}$/, { message: "El CUIT/CUIL debe ser un número de 11 dígitos." }),
 });
