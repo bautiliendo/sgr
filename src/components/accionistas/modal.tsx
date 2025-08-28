@@ -18,6 +18,7 @@ interface AccionistaModalProps {
 const initialAccionistaState: Omit<Accionista, 'id'> = {
     nombre: "",
     apellido: "",
+    email: "",
     cuitCuilAccionista: "",
     participacion: 0,
 };
@@ -107,6 +108,11 @@ export default function AccionistaModal({
                         <Label htmlFor="apellido">Apellido</Label>
                         <Input id="apellido" value={accionistaData.apellido} onChange={e => handleChange('apellido', e.target.value)} />
                         {errors.apellido && <p className="text-sm text-red-600 mt-1">{errors.apellido[0]}</p>}
+                    </div>
+                    <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" value={accionistaData.email} onChange={e => handleChange('email', e.target.value)} />
+                        {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email[0]}</p>}
                     </div>
                     <div>
                         <Label htmlFor="cuit">CUIT/CUIL</Label>

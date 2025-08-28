@@ -28,6 +28,7 @@ export interface Accionista {
   id: string;
   nombre: string;
   apellido: string;
+  email: string;
   cuitCuilAccionista: string;
   participacion: number;
 }
@@ -92,6 +93,7 @@ export default function FormularioEmpresa() {
     {}
   );
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
+  const [accionistaFiles, setAccionistaFiles] = useState<Record<string, File>>({});
   const [fileError, setFileError] = useState<string | null>(null);
   const [accionistasError, setAccionistasError] = useState<string | null>(null);
 
@@ -119,12 +121,35 @@ export default function FormularioEmpresa() {
       ...prev,
       accionistas: prev.accionistas.filter(acc => acc.id !== id)
     }));
+    // También eliminar el archivo DNI del accionista si existe
+    handleDeleteAccionistaFile(id);
   };
 
   const handleDeleteFile = (doc: string) => {
     setUploadedFiles((prev) => {
       const newFiles = { ...prev };
       delete newFiles[doc];
+      return newFiles;
+    });
+  };
+
+  const handleAccionistaFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    accionistaId: string
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAccionistaFiles((prev) => ({
+        ...prev,
+        [accionistaId]: file,
+      }));
+    }
+  };
+
+  const handleDeleteAccionistaFile = (accionistaId: string) => {
+    setAccionistaFiles((prev) => {
+      const newFiles = { ...prev };
+      delete newFiles[accionistaId];
       return newFiles;
     });
   };
@@ -140,17 +165,6 @@ export default function FormularioEmpresa() {
   };
 
 
-  useEffect(() => {
-    const savedData = localStorage.getItem("formData");
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setFormData(prevData => ({ ...prevData, ...parsedData }));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("formData", JSON.stringify(formData));
-  }, [formData]);
 
   const steps = [
     { number: 1, title: "Datos de la Cuenta" },
@@ -187,9 +201,23 @@ export default function FormularioEmpresa() {
       if (!validationResult.success) {
         const formattedErrors = validationResult.error.flatten().fieldErrors;
         // Mostramos el error de accionistas en el estado de errores general
-        setErrors(prev => ({...prev, ...formattedErrors}));
+        setErrors(prev => ({ ...prev, ...formattedErrors }));
         setAccionistasError(
           formattedErrors.accionistas?.[0] || "Por favor, revise los datos de los accionistas."
+        );
+        return;
+      }
+
+      // Validar que todos los accionistas tengan su DNI subido
+      const accionistasWithoutDNI = formData.accionistas.filter(
+        (accionista) => !accionistaFiles[accionista.id]
+      );
+      
+      if (accionistasWithoutDNI.length > 0) {
+        setAccionistasError(
+          `Faltan DNIs de los siguientes accionistas: ${accionistasWithoutDNI
+            .map((acc) => `${acc.nombre} ${acc.apellido}`)
+            .join(", ")}`
         );
         return;
       }
@@ -223,12 +251,13 @@ export default function FormularioEmpresa() {
 
     setFileError(null); // Limpiamos el error
     setAccionistasError(null);
-    console.log("Formulario enviado:", { formData, uploadedFiles });
+    console.log("Formulario enviado:", { formData, uploadedFiles, accionistaFiles });
     toast.success("Formulario enviado correctamente!");
     localStorage.removeItem("formData");
     // Reiniciar el estado del formulario para un nuevo envío
     setFormData(initialFormData);
     setUploadedFiles({});
+    setAccionistaFiles({});
     setCurrentStep(1);
   };
 
@@ -268,6 +297,19 @@ export default function FormularioEmpresa() {
     setCurrentStep(step);
   };
 
+  useEffect(() => {
+    const savedData = localStorage.getItem("formData");
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      setFormData(prevData => ({ ...prevData, ...parsedData }));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("formData", JSON.stringify(formData));
+  }, [formData]);
+
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -282,13 +324,12 @@ export default function FormularioEmpresa() {
                   onClick={() => handleStepClick(step.number)}
                 >
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                      step.number === currentStep
-                        ? "bg-blue-500"
-                        : step.number < currentStep
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${step.number === currentStep
+                      ? "bg-blue-500"
+                      : step.number < currentStep
                         ? "bg-blue-500"
                         : "bg-gray-300"
-                    }`}
+                      }`}
                   >
                     {step.number < currentStep ? (
                       <Check className="w-6 h-6" />
@@ -309,7 +350,17 @@ export default function FormularioEmpresa() {
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-2xl text-center">
-              Paso {currentStep}: {steps[currentStep - 1].title}
+
+              <div className="flex flex-col items-center gap-2">
+
+                <span>Paso {currentStep}: {steps[currentStep - 1].title}</span>
+                {currentStep === 3 &&
+                  formData.personeria &&
+                  <span className="text-base font-medium text-gray-600"> Persona: {formData.personeria === "juridica" ? "Jurídica" : "Física"}</span>}
+                {currentStep === 3 &&
+                  formData.tipoEmpresa &&
+                  <span className="text-base font-medium text-gray-600"> Tipo de empresa: {formData.tipoEmpresa === "agricola" ? "Agrícola" : "No Agrícola"}</span>}
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -560,6 +611,9 @@ export default function FormularioEmpresa() {
                 accionistasError={accionistasError}
                 onDeleteFile={handleDeleteFile}
                 onDownloadFile={handleDownloadFile}
+                accionistaFiles={accionistaFiles}
+                onAccionistaFileChange={handleAccionistaFileChange}
+                onDeleteAccionistaFile={handleDeleteAccionistaFile}
               />
             )}
 

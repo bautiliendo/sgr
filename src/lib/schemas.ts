@@ -22,6 +22,7 @@ export const step2Schema = z.object({
 export const accionistaSchema = z.object({
   nombre: z.string().min(2, { message: "Debe tener al menos 5 caracteres." }),
   apellido: z.string().min(2, { message: "Debe tener al menos 5 caracteres." }),
+  email: z.string().email({ message: "El formato del email no es válido." }),
   cuitCuilAccionista: z.string().regex(/^\d{11}$/, { message: "El CUIT/CUIL debe ser un número de 11 dígitos." }),
   participacion: z.coerce.number().min(1, { message: "La participación debe ser mayor a 0." }).max(100, { message: "La participación no puede ser mayor a 100." }),
 });

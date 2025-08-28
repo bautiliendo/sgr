@@ -21,18 +21,20 @@ import {
 export const docsJuridica = [
   "Certificado PYME vigente",
   "DDJJ de bienes personales o manifestacion de bienes de c/ accionista",
-  "Ventas post cierre balance",
   "Formulario alta",
+  "Reseña",
   "Detalle de deudas",
+  "Ventas post cierre balance",
   "Últimos dos balances certificados",
 ];
 
 export const docsFisica = [
   "Certificado PYME Vigente",
-  "Última DDJJ ganancias",
   "DDJJ de bienes personales o manifestacion de bienes",
   "Formulario alta",
   "Reseña",
+  "Detalle de deudas",
+  "Última DDJJ ganancias",
   "DNI propio y de su cónyuge",
 ];
 
@@ -69,6 +71,9 @@ interface DocumentacionProps {
   accionistasError: string | null;
   onDeleteFile: (doc: string) => void;
   onDownloadFile: (doc: string) => void;
+  accionistaFiles: Record<string, File>;
+  onAccionistaFileChange: (event: React.ChangeEvent<HTMLInputElement>, accionistaId: string) => void;
+  onDeleteAccionistaFile: (accionistaId: string) => void;
 }
 
 export default function Documentacion({
@@ -82,6 +87,9 @@ export default function Documentacion({
   accionistasError,
   onDeleteFile,
   onDownloadFile,
+  accionistaFiles,
+  onAccionistaFileChange,
+  onDeleteAccionistaFile,
 }: DocumentacionProps) {
   let documentosAMostrar: string[] = [];
   if (personeria === "juridica") {
@@ -215,6 +223,9 @@ export default function Documentacion({
               accionistas={accionistas}
               onSave={onSaveAccionista}
               onDelete={onDeleteAccionista}
+              accionistaFiles={accionistaFiles}
+              onAccionistaFileChange={onAccionistaFileChange}
+              onDeleteAccionistaFile={onDeleteAccionistaFile}
             />
             {accionistasError && (
               <p className="text-sm text-red-600 mt-2">{accionistasError}</p>
