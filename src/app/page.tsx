@@ -164,8 +164,6 @@ export default function FormularioEmpresa() {
     }
   };
 
-
-
   const steps = [
     { number: 1, title: "Datos de la Cuenta" },
     { number: 2, title: "Datos del Contacto" },
@@ -194,7 +192,7 @@ export default function FormularioEmpresa() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validación para el paso 3 (jurídica)
     if (formData.personeria === "juridica") {
       const validationResult = step3JuridicaSchema.safeParse(formData);
@@ -212,7 +210,7 @@ export default function FormularioEmpresa() {
       const accionistasWithoutDNI = formData.accionistas.filter(
         (accionista) => !accionistaFiles[accionista.id]
       );
-      
+
       if (accionistasWithoutDNI.length > 0) {
         setAccionistasError(
           `Faltan DNIs de los siguientes accionistas: ${accionistasWithoutDNI
@@ -252,13 +250,21 @@ export default function FormularioEmpresa() {
     setFileError(null); // Limpiamos el error
     setAccionistasError(null);
     console.log("Formulario enviado:", { formData, uploadedFiles, accionistaFiles });
-    toast.success("Formulario enviado correctamente!");
+    try {
+      const response = await fetch('/api/send');
+      const data = await response.json();
+      console.log('Email sent:', data);
+    } catch (error) {
+      console.error("Error sending email:", error);
+    }
     localStorage.removeItem("formData");
     // Reiniciar el estado del formulario para un nuevo envío
     setFormData(initialFormData);
     setUploadedFiles({});
     setAccionistaFiles({});
     setCurrentStep(1);
+    toast.success("Formulario enviado correctamente!");
+
   };
 
   const handleFileChange = (
