@@ -18,39 +18,63 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export const docsJuridica = [
-  "Certificado PYME vigente",
-  "DDJJ de bienes personales o manifestacion de bienes de c/ accionista",
-  "Formulario alta",
-  "Reseña",
-  "Detalle de deudas",
-  "Ventas post cierre balance",
-  "Últimos dos balances certificados",
+export interface Documento {
+  nombre: string;
+  descripcion: string;
+  plantilla?: string;
+  tipo?: "plantilla" | "ejemplo";
+}
+
+export const docsFisica: Documento[] = [
+  {
+    nombre: "Certificado PYME Vigente",
+    descripcion: "Constancia oficial que acredita que la persona física está inscrita y reconocida como micro, pequeña o mediana empresa",
+    plantilla: "certificado-pyme-vigente.pdf",
+    tipo: "ejemplo"
+  },
+  {
+    nombre: "DDJJ de bienes personales o manifestacion de bienes",
+    descripcion: "Declaración jurada con detalle de patrimonio (inmuebles, vehículos, inversiones, etc.), utilizada para evaluar solvencia.",
+    plantilla: "ddjj-bienes.pdf",
+    tipo: "ejemplo"
+  },
+  { nombre: "Formulario alta", descripcion: "Documento inicial de registro para solicitar el crédito o ingresar al programa de beneficios.", plantilla: "solicitud-admision.xlsx", tipo: "plantilla" },
+  { nombre: "Reseña", descripcion: "Documento que resume la situación de la actividad económica de la persona, antecedentes, destino de fondos y expectativas de crecimiento.", plantilla: "reseña.doc", tipo: "plantilla" },
+  { nombre: "Detalle de deudas", descripcion: "Listado de obligaciones financieras vigentes (bancarias, impositivas o comerciales), útil para evaluar capacidad de pago", plantilla: "detalle-deudas.xlsx", tipo: "plantilla" },
+  { nombre: "Última DDJJ ganancias", descripcion: "Declaración jurada del impuesto a las ganancias, para verificar ingresos y situación fiscal", plantilla: "ganancias.pdf", tipo: "ejemplo" },
+  { nombre: "DNI propio y de su cónyuge", descripcion: "Documentación personal requerida para identificación y validación del solicitante y su cónyuge." },
 ];
 
-export const docsFisica = [
-  "Certificado PYME Vigente",
-  "DDJJ de bienes personales o manifestacion de bienes",
-  "Formulario alta",
-  "Reseña",
-  "Detalle de deudas",
-  "Última DDJJ ganancias",
-  "DNI propio y de su cónyuge",
+export const docsJuridica: Documento[] = [
+  {
+    nombre: "Certificado PYME vigente",
+    descripcion: "Constancia oficial que acredita que la persona física está inscrita y reconocida como micro, pequeña o mediana empresa",
+    plantilla: "certificado-pyme-vigente.pdf",
+    tipo: "ejemplo"
+  },
+  {
+    nombre: "DDJJ de bienes personales o manifestacion de bienes de c/ accionista",
+    descripcion: "Declaración jurada con detalle de patrimonio (inmuebles, vehículos, inversiones, etc.), utilizada para evaluar solvencia.",
+    plantilla: "ddjj-bienes.pdf",
+    tipo: "ejemplo"
+  },
+  { nombre: "Formulario alta", descripcion: "Documento inicial de registro para solicitar el crédito o ingresar al programa de beneficios.", plantilla: "solicitud-admision.xlsx", tipo: "plantilla" },
+  { nombre: "Reseña", descripcion: "Documento que detalla la constitución, actividad productiva y comercial, estructura administrativa y destino de los fondos solicitados.", plantilla: "reseña.doc", tipo: "plantilla" },
+  { nombre: "Detalle de deudas", descripcion: "Listado de pasivos de la empresa (bancarios, fiscales, comerciales).", plantilla: "detalle-deudas.xlsx", tipo: "plantilla" },
+  {
+    nombre: "Ventas post cierre balance",
+    descripcion: "Informe actualizado de ventas generadas después del último balance presentado, para reflejar actividad reciente",
+    plantilla: "ventas-post-cierre-balance.xlsx",
+    tipo: "plantilla"
+  },
+  { nombre: "Últimos dos balances certificados", descripcion: "Estados contables auditados, fundamentales para evaluar la solvencia, evolución y capacidad de repago" },
 ];
 
-export const docsAgricola = ["Plan de siembra", "IP1", "IP2"];
 
-const docsPlantilla = [
-  "Ventas post cierre balance",
-  "Detalle de deudas",
-  "Formulario alta",
-  "Reseña",
-  "Plan de siembra",
-];
-
-const docsSinVisualizacion = [
-  "Últimos dos balances certificados",
-  "DNI propio y de su cónyuge",
+export const docsAgricola: Documento[] = [
+  { nombre: "Plan de siembra", descripcion: "Plan de siembra", plantilla: "PlanDeSiembra.xlsx", tipo: "plantilla" },
+  { nombre: "IP1", descripcion: "IP1", plantilla: "ip1.pdf", tipo: "ejemplo" },
+  { nombre: "IP2", descripcion: "IP2", plantilla: "ip2.pdf", tipo: "ejemplo" }
 ];
 
 // TODO: Mover a un archivo de tipos dedicado
@@ -91,7 +115,7 @@ export default function Documentacion({
   onAccionistaFileChange,
   onDeleteAccionistaFile,
 }: DocumentacionProps) {
-  let documentosAMostrar: string[] = [];
+  let documentosAMostrar: Documento[] = [];
   if (personeria === "juridica") {
     documentosAMostrar = [...docsJuridica];
   } else if (personeria === "fisica") {
@@ -119,8 +143,8 @@ export default function Documentacion({
                   key={index}
                   className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
                 >
-                  <span className="text-sm">{doc}</span>
-                  {uploadedFiles[doc] ? (
+                  <span className="text-sm">{doc.nombre}</span>
+                  {uploadedFiles[doc.nombre] ? (
                     <div className="flex gap-1">
                       <TooltipProvider>
                         <Tooltip>
@@ -134,7 +158,7 @@ export default function Documentacion({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{uploadedFiles[doc].name}</p>
+                            <p>{uploadedFiles[doc.nombre].name}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -142,21 +166,21 @@ export default function Documentacion({
                         variant="ghost"
                         size="icon"
                         className="hover:text-red-500"
-                        onClick={() => onDeleteFile(doc)}
+                        onClick={() => onDeleteFile(doc.nombre)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      {docsPlantilla.includes(doc) ? (
+                      {doc.tipo === "plantilla" ? (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => onDownloadFile(doc)}
+                                onClick={() => onDownloadFile(doc.nombre)}
                               >
                                 <DownloadIcon className="h-4 w-4" />
                               </Button>
@@ -166,14 +190,14 @@ export default function Documentacion({
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                      ) : !docsSinVisualizacion.includes(doc) ? (
+                      ) : doc.tipo === "ejemplo" ? (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => onDownloadFile(doc)}
+                                onClick={() => onDownloadFile(doc.nombre)}
                               >
                                 <EyeIcon className="h-4 w-4" />
                               </Button>
@@ -190,7 +214,7 @@ export default function Documentacion({
                             <CircleQuestionMark className="w-4 h-4" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{documentosAMostrar[index]}</p>
+                            <p>{doc.descripcion}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -200,16 +224,16 @@ export default function Documentacion({
                         size="sm"
                         className="flex items-center gap-2 bg-transparent cursor-pointer"
                       >
-                        <label htmlFor={`file-upload-${doc}-${index}`}>
+                        <label htmlFor={`file-upload-${doc.nombre}-${index}`}>
                           <Upload className="w-4 h-4" />
                           Subir
                         </label>
                       </Button>
                       <input
-                        id={`file-upload-${doc}-${index}`}
+                        id={`file-upload-${doc.nombre}-${index}`}
                         type="file"
                         className="hidden"
-                        onChange={(e) => handleFileChange(e, doc)}
+                        onChange={(e) => handleFileChange(e, doc.nombre)}
                       />
                     </div>
                   )}
@@ -243,8 +267,8 @@ export default function Documentacion({
                 key={index}
                 className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
               >
-                <span className="text-sm">{doc}</span>
-                {uploadedFiles[doc] ? (
+                <span className="text-sm">{doc.nombre}</span>
+                {uploadedFiles[doc.nombre] ? (
                   <div className="flex gap-1">
                     <TooltipProvider>
                       <Tooltip>
@@ -258,7 +282,7 @@ export default function Documentacion({
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{uploadedFiles[doc].name}</p>
+                          <p>{uploadedFiles[doc.nombre].name}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -266,21 +290,21 @@ export default function Documentacion({
                       variant="ghost"
                       size="icon"
                       className="hover:text-red-500"
-                      onClick={() => onDeleteFile(doc)}
+                      onClick={() => onDeleteFile(doc.nombre)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    {docsPlantilla.includes(doc) ? (
+                    {doc.tipo === "plantilla" ? (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => onDownloadFile(doc)}
+                              onClick={() => onDownloadFile(doc.nombre)}
                             >
                               <DownloadIcon className="h-4 w-4" />
                             </Button>
@@ -290,14 +314,14 @@ export default function Documentacion({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                    ) : !docsSinVisualizacion.includes(doc) ? (
+                    ) : doc.tipo === 'ejemplo' ? (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => onDownloadFile(doc)}
+                              onClick={() => onDownloadFile(doc.nombre)}
                             >
                               <EyeIcon className="h-4 w-4" />
                             </Button>
@@ -314,7 +338,7 @@ export default function Documentacion({
                           <CircleQuestionMark className="w-4 h-4" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{documentosAMostrar[index]}</p>
+                          <p>{doc.descripcion}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -324,16 +348,16 @@ export default function Documentacion({
                       size="sm"
                       className="flex items-center gap-2 bg-transparent cursor-pointer"
                     >
-                      <label htmlFor={`file-upload-${doc}-${index}`}>
+                      <label htmlFor={`file-upload-${doc.nombre}-${index}`}>
                         <Upload className="w-4 h-4" />
                         Subir
                       </label>
                     </Button>
                     <input
-                      id={`file-upload-${doc}-${index}`}
+                      id={`file-upload-${doc.nombre}-${index}`}
                       type="file"
                       className="hidden"
-                      onChange={(e) => handleFileChange(e, doc)}
+                      onChange={(e) => handleFileChange(e, doc.nombre)}
                     />
                   </div>
                 )}

@@ -15,6 +15,7 @@ import {
 import { Check } from "lucide-react";
 import { step1Schema, step2Schema, step3JuridicaSchema } from "@/lib/schemas";
 import { toast } from "react-toastify";
+import { enviarFormulario } from "@/lib/actions";
 import Documentacion, {
   docsJuridica,
   docsFisica,
@@ -65,26 +66,6 @@ const initialFormData: FormData = {
   telefono: "",
   accionistas: [],
 };
-
-const exampleFiles: { [key: string]: string } = {
-  // Jurídica
-  "Certificado PYME vigente": "CERTIFICADO_PYME_2026_blur_effect.pdf",
-  "DDJJ de bienes personales o manifestacion de bienes de c/ accionista":
-    "manifestacion_bienes_zanel_blur_v2.pdf",
-  "Ventas post cierre balance": "ventas post cierre balance.xlsx",
-  "Detalle de deudas": "Deudas detalladas.xlsx",
-  "Últimos dos balances certificados": "",
-
-  // Física
-  "Certificado PYME Vigente": "CERTIFICADO_PYME_2026_blur_effect.pdf",
-  "Última DDJJ ganancias": "GANANCIAS 24 blurr.pdf",
-  "DNI propio y de su cónyuge": "",
-  "Formulario alta": "solicitud-admision.xlsx",
-  "Reseña": "Breve Reseña de la Empresa.doc",
-  "DDJJ de bienes personales o manifestacion de bienes":
-    "DDJJ Bienes Personales 2024 blurr.pdf",
-};
-
 
 export default function FormularioEmpresa() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -155,9 +136,13 @@ export default function FormularioEmpresa() {
   };
 
   const handleDownloadFile = (docName: string): void => {
-    const fileName = exampleFiles[docName];
+    // Combinamos todos los documentos para encontrar el correcto
+    const allDocs = [...docsJuridica, ...docsFisica, ...docsAgricola];
+    const doc = allDocs.find(d => d.nombre === docName);
+    const fileName = doc?.plantilla; // Usamos la nueva propiedad
+
     if (fileName) {
-      const url = `/documentos-ejemplo/${fileName}`;
+      const url = `/documentos-fisica-juridica/${fileName}`;
       window.open(url, "_blank");
     } else {
       toast.info("No hay un archivo de ejemplo disponible para este documento.");
@@ -226,13 +211,13 @@ export default function FormularioEmpresa() {
     let requiredDocs: string[] = [];
 
     if (personeria === "juridica") {
-      requiredDocs = docsJuridica;
+      requiredDocs = docsJuridica.map(doc => doc.nombre);
     } else if (personeria === "fisica") {
-      requiredDocs = docsFisica;
+      requiredDocs = docsFisica.map(doc => doc.nombre);
     }
 
     if (formData.tipoEmpresa === "agricola") {
-      requiredDocs = [...requiredDocs, ...docsAgricola];
+      requiredDocs = [...requiredDocs, ...docsAgricola.map(doc => doc.nombre)];
     }
 
     const uploadedDocKeys = Object.keys(uploadedFiles);
@@ -249,22 +234,53 @@ export default function FormularioEmpresa() {
 
     setFileError(null); // Limpiamos el error
     setAccionistasError(null);
-    console.log("Formulario enviado:", { formData, uploadedFiles, accionistaFiles });
-    try {
-      const response = await fetch('/api/send');
-      const data = await response.json();
-      console.log('Email sent:', data);
-    } catch (error) {
-      console.error("Error sending email:", error);
-    }
-    localStorage.removeItem("formData");
-    // Reiniciar el estado del formulario para un nuevo envío
-    setFormData(initialFormData);
-    setUploadedFiles({});
-    setAccionistaFiles({});
-    setCurrentStep(1);
-    toast.success("Formulario enviado correctamente!");
+    
+    // Crear FormData para enviar al server action
+    const formDataToSend = new FormData();
+    
+    // Agregar datos básicos del formulario
+    formDataToSend.append('personeria', formData.personeria || '');
+    formDataToSend.append('tipoEmpresa', formData.tipoEmpresa || '');
+    formDataToSend.append('nombreRazonSocial', formData.nombreRazonSocial);
+    formDataToSend.append('cuitCuil', formData.cuitCuil);
+    formDataToSend.append('nombre', formData.nombre);
+    formDataToSend.append('apellido', formData.apellido);
+    formDataToSend.append('cuitCuilContacto', formData.cuitCuilContacto);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('relacionCuenta', formData.relacionCuenta);
+    formDataToSend.append('telefono', formData.telefono);
+    
+    // Agregar accionistas como JSON string
+    formDataToSend.append('accionistas', JSON.stringify(formData.accionistas));
+    
+    // Agregar archivos de documentación
+    Object.entries(uploadedFiles).forEach(([docName, file]) => {
+      formDataToSend.append(`doc_${docName}`, file);
+    });
+    
+    // Agregar archivos de accionistas (DNIs)
+    Object.entries(accionistaFiles).forEach(([accionistaId, file]) => {
+      formDataToSend.append(`dni_${accionistaId}`, file);
+    });
 
+    try {
+      const result = await enviarFormulario(formDataToSend);
+      
+      if (result.success) {
+        localStorage.removeItem("formData");
+        // Reiniciar el estado del formulario para un nuevo envío
+        setFormData(initialFormData);
+        setUploadedFiles({});
+        setAccionistaFiles({});
+        setCurrentStep(1);
+        toast.success(result.message || "Formulario enviado correctamente!");
+      } else {
+        toast.error(result.error || "Error al enviar el formulario");
+      }
+    } catch (error) {
+      console.error("Error enviando formulario:", error);
+      toast.error("Error interno. Inténtelo nuevamente.");
+    }
   };
 
   const handleFileChange = (
@@ -299,10 +315,6 @@ export default function FormularioEmpresa() {
     }
   };
 
-  const handleStepClick = (step: number) => {
-    setCurrentStep(step);
-  };
-
   useEffect(() => {
     const savedData = localStorage.getItem("formData");
     if (savedData) {
@@ -317,7 +329,7 @@ export default function FormularioEmpresa() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Wizard de progreso */}
         <div className="mb-8">
@@ -326,8 +338,7 @@ export default function FormularioEmpresa() {
               <div key={step.number} className="flex items-center">
                 {/* Círculo del paso */}
                 <div
-                  className="flex flex-col items-center cursor-pointer"
-                  onClick={() => handleStepClick(step.number)}
+                  className="flex flex-col items-center"
                 >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${step.number === currentStep
@@ -551,6 +562,11 @@ export default function FormularioEmpresa() {
                       {errors.email[0]}
                     </p>
                   )}
+                  <span className="text-xs text-gray-400 mt-1">
+                    <p>
+                      Recibirá un email de confirmación a esa dirección al enviar el formulario.
+                    </p>
+                  </span>
                 </div>
 
                 <div>
